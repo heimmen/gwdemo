@@ -1,66 +1,66 @@
-// gwServer.cpp : ¶¨Òå¿ØÖÆÌ¨Ó¦ÓÃ³ÌĞòµÄÈë¿Úµã¡£
+// gwServer.cpp : å®šä¹‰æ§åˆ¶å°åº”ç”¨ç¨‹åºçš„å…¥å£ç‚¹ã€‚
 //
 
 #include "stdafx.h"
 
 
 #include <iostream>
-#include <winsock2.h>  // Winsock¿â
-#pragma comment(lib, "ws2_32.lib")  // ¼ÓÔØ Winsock ¿â
+#include <winsock2.h>  // Winsockåº“
+#pragma comment(lib, "ws2_32.lib")  // åŠ è½½ Winsock åº“
 
 int main() {
-    // ³õÊ¼»¯ Winsock ¿â
+    // åˆå§‹åŒ– Winsock åº“
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-        std::cerr << "Winsock ³õÊ¼»¯Ê§°Ü" << std::endl;
+        std::cerr << "Winsock åˆå§‹åŒ–å¤±è´¥" << std::endl;
         return 1;
     }
 
-    // ´´½¨ UDP Ì×½Ó×Ö
+    // åˆ›å»º UDP å¥—æ¥å­—
     SOCKET udpSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (udpSocket == INVALID_SOCKET) {
-        std::cerr << "´´½¨Ì×½Ó×ÖÊ§°Ü" << std::endl;
+        std::cerr << "åˆ›å»ºå¥—æ¥å­—å¤±è´¥" << std::endl;
         WSACleanup();
         return 1;
     }
 
-    // ÉèÖÃ½ÓÊÕ¶ËµØÖ·ĞÅÏ¢
+    // è®¾ç½®æ¥æ”¶ç«¯åœ°å€ä¿¡æ¯
     sockaddr_in receiverAddr;
     receiverAddr.sin_family = AF_INET;
-    receiverAddr.sin_port = htons(8888);  // ½ÓÊÕ¶Ë¼àÌı¶Ë¿Ú
-    receiverAddr.sin_addr.s_addr = INADDR_ANY;  // ¼àÌıËùÓĞ¿ÉÓÃ½Ó¿Ú
+    receiverAddr.sin_port = htons(8888);  // æ¥æ”¶ç«¯ç›‘å¬ç«¯å£
+    receiverAddr.sin_addr.s_addr = INADDR_ANY;  // ç›‘å¬æ‰€æœ‰å¯ç”¨æ¥å£
 
-    // °ó¶¨Ì×½Ó×Ö
+    // ç»‘å®šå¥—æ¥å­—
     if (bind(udpSocket, (sockaddr*)&receiverAddr, sizeof(receiverAddr)) == SOCKET_ERROR) {
-        std::cerr << "°ó¶¨Ê§°Ü" << std::endl;
+        std::cerr << "ç»‘å®šå¤±è´¥" << std::endl;
         closesocket(udpSocket);
         WSACleanup();
         return 1;
     }
 
-    // ½ÓÊÕÊı¾İ
+    // æ¥æ”¶æ•°æ®
     char buffer[1024] = {0};
     sockaddr_in senderAddr;
     int senderAddrSize = sizeof(senderAddr);
 
-    std::cout << "µÈ´ıÊı¾İ..." << std::endl;
+    std::cout << "ç­‰å¾…æ•°æ®..." << std::endl;
 
     int receiveResult = recvfrom(udpSocket, buffer, sizeof(buffer) - 1, 0, (sockaddr*)&senderAddr, &senderAddrSize);
     if (receiveResult == SOCKET_ERROR) {
-        std::cerr << "½ÓÊÕÊı¾İÊ§°Ü" << std::endl;
+        std::cerr << "æ¥æ”¶æ•°æ®å¤±è´¥" << std::endl;
         closesocket(udpSocket);
         WSACleanup();
         return 1;
     }
 
-    // Êä³ö½ÓÊÕµ½µÄÊı¾İ
-    buffer[receiveResult] = '\0';  // È·±£×Ö·û´®Ä©Î²ÓĞ¿ÕÖÕÖ¹·û
-    std::cout << "½ÓÊÕµ½ÏûÏ¢£º" << buffer << std::endl;
+    // è¾“å‡ºæ¥æ”¶åˆ°çš„æ•°æ®
+    buffer[receiveResult] = '\0';  // ç¡®ä¿å­—ç¬¦ä¸²æœ«å°¾æœ‰ç©ºç»ˆæ­¢ç¬¦
+    std::cout << "æ¥æ”¶åˆ°æ¶ˆæ¯ï¼š" << buffer << std::endl;
 
-    // ¹Ø±ÕÌ×½Ó×Ö
+    // å…³é—­å¥—æ¥å­—
     closesocket(udpSocket);
 
-    // ÇåÀí Winsock ¿â
+    // æ¸…ç† Winsock åº“
     WSACleanup();
 
     return 0;

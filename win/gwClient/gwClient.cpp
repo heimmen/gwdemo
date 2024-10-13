@@ -1,4 +1,4 @@
-// gwClient.cpp : ¶¨Òå¿ØÖÆÌ¨Ó¦ÓÃ³ÌĞòµÄÈë¿Úµã¡£
+// gwClient.cpp : å®šä¹‰æ§åˆ¶å°åº”ç”¨ç¨‹åºçš„å…¥å£ç‚¹ã€‚
 //
 //
 #include "stdafx.h"
@@ -10,49 +10,49 @@
 //}
 //
 #include <iostream>
-#include <winsock2.h>  // Winsock¿â
-#pragma comment(lib, "ws2_32.lib")  // ¼ÓÔØ Winsock ¿â
+#include <winsock2.h>  // Winsockåº“
+#pragma comment(lib, "ws2_32.lib")  // åŠ è½½ Winsock åº“
 
 int main() {
-    // ³õÊ¼»¯ Winsock ¿â
+    // åˆå§‹åŒ– Winsock åº“
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-        std::cerr << "Winsock ³õÊ¼»¯Ê§°Ü" << std::endl;
+        std::cerr << "Winsock åˆå§‹åŒ–å¤±è´¥" << std::endl;
         return 1;
     }
 
-    // ´´½¨ UDP Ì×½Ó×Ö
+    // åˆ›å»º UDP å¥—æ¥å­—
     SOCKET udpSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (udpSocket == INVALID_SOCKET) {
-        std::cerr << "´´½¨Ì×½Ó×ÖÊ§°Ü" << std::endl;
+        std::cerr << "åˆ›å»ºå¥—æ¥å­—å¤±è´¥" << std::endl;
         WSACleanup();
         return 1;
     }
 
-    // Ä¿±êµØÖ·ĞÅÏ¢£¨½ÓÊÕ·½µÄ IP ºÍ¶Ë¿Ú£©
+    // ç›®æ ‡åœ°å€ä¿¡æ¯ï¼ˆæ¥æ”¶æ–¹çš„ IP å’Œç«¯å£ï¼‰
     sockaddr_in receiverAddr;
     receiverAddr.sin_family = AF_INET;
-    receiverAddr.sin_port = htons(8888);  // Ä¿±ê¶Ë¿Ú
-    receiverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");  // Ä¿±ê IP µØÖ·£¨±¾µØ£©
+    receiverAddr.sin_port = htons(8888);  // ç›®æ ‡ç«¯å£
+    receiverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");  // ç›®æ ‡ IP åœ°å€ï¼ˆæœ¬åœ°ï¼‰
 
-    // Òª·¢ËÍµÄÊı¾İ
+    // è¦å‘é€çš„æ•°æ®
     const char* message = "Hello, this is a UDP message!";
     
-    // ·¢ËÍÊı¾İµ½Ä¿±êµØÖ·
+    // å‘é€æ•°æ®åˆ°ç›®æ ‡åœ°å€
     int sendResult = sendto(udpSocket, message, strlen(message), 0, (sockaddr*)&receiverAddr, sizeof(receiverAddr));
     if (sendResult == SOCKET_ERROR) {
-        std::cerr << "·¢ËÍÊı¾İÊ§°Ü" << std::endl;
+        std::cerr << "å‘é€æ•°æ®å¤±è´¥" << std::endl;
         closesocket(udpSocket);
         WSACleanup();
         return 1;
     }
 
-    std::cout << "ÏûÏ¢·¢ËÍ³É¹¦£¡" << std::endl;
+    std::cout << "æ¶ˆæ¯å‘é€æˆåŠŸï¼" << std::endl;
 
-    // ¹Ø±ÕÌ×½Ó×Ö
+    // å…³é—­å¥—æ¥å­—
     closesocket(udpSocket);
 
-    // ÇåÀí Winsock ¿â
+    // æ¸…ç† Winsock åº“
     WSACleanup();
 
     return 0;
