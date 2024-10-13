@@ -1,0 +1,9 @@
+win/Debug/
+win/gwClient/Debug/
+win/gwServer/Debug/
+win/ipch/
+win/gwClient/gwClient.vcxproj.filters
+win/gwClient/gwClient.vcxproj.user
+win/gwServer/gwServer.vcxproj.user
+win/gwServer/gwServer.vcxproj.filters
+win/gwServer.sdf

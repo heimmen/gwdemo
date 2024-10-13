@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gwServer", "gwServer\gwServer.vcxproj", "{6C2A6350-8454-48A8-9005-E2759AC1D7F9}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gwClient", "gwClient\gwClient.vcxproj", "{5DD40EC3-1EFB-4E5A-B47A-BEFC50D14A13}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6C2A6350-8454-48A8-9005-E2759AC1D7F9}.Debug|Win32.ActiveCfg = Debug|Win32
+		{6C2A6350-8454-48A8-9005-E2759AC1D7F9}.Debug|Win32.Build.0 = Debug|Win32
+		{6C2A6350-8454-48A8-9005-E2759AC1D7F9}.Release|Win32.ActiveCfg = Release|Win32
+		{6C2A6350-8454-48A8-9005-E2759AC1D7F9}.Release|Win32.Build.0 = Release|Win32
+		{5DD40EC3-1EFB-4E5A-B47A-BEFC50D14A13}.Debug|Win32.ActiveCfg = Debug|Win32
+		{5DD40EC3-1EFB-4E5A-B47A-BEFC50D14A13}.Debug|Win32.Build.0 = Debug|Win32
+		{5DD40EC3-1EFB-4E5A-B47A-BEFC50D14A13}.Release|Win32.ActiveCfg = Release|Win32
+		{5DD40EC3-1EFB-4E5A-B47A-BEFC50D14A13}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
