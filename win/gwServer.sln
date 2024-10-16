@@ -5,6 +5,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gwServer", "gwServer\gwServ
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gwClient", "gwClient\gwClient.vcxproj", "{5DD40EC3-1EFB-4E5A-B47A-BEFC50D14A13}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tokenBucket", "tokenBucket\tokenBucket.vcxproj", "{60FBCED8-BC1E-4B6D-8DD3-1156C1E1849C}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tbClient", "tbClient\tbClient.vcxproj", "{94DF8971-1708-4EB2-A598-2CFA701B5DCB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -19,6 +23,14 @@ Global
 		{5DD40EC3-1EFB-4E5A-B47A-BEFC50D14A13}.Debug|Win32.Build.0 = Debug|Win32
 		{5DD40EC3-1EFB-4E5A-B47A-BEFC50D14A13}.Release|Win32.ActiveCfg = Release|Win32
 		{5DD40EC3-1EFB-4E5A-B47A-BEFC50D14A13}.Release|Win32.Build.0 = Release|Win32
+		{60FBCED8-BC1E-4B6D-8DD3-1156C1E1849C}.Debug|Win32.ActiveCfg = Debug|Win32
+		{60FBCED8-BC1E-4B6D-8DD3-1156C1E1849C}.Debug|Win32.Build.0 = Debug|Win32
+		{60FBCED8-BC1E-4B6D-8DD3-1156C1E1849C}.Release|Win32.ActiveCfg = Release|Win32
+		{60FBCED8-BC1E-4B6D-8DD3-1156C1E1849C}.Release|Win32.Build.0 = Release|Win32
+		{94DF8971-1708-4EB2-A598-2CFA701B5DCB}.Debug|Win32.ActiveCfg = Debug|Win32
+		{94DF8971-1708-4EB2-A598-2CFA701B5DCB}.Debug|Win32.Build.0 = Debug|Win32
+		{94DF8971-1708-4EB2-A598-2CFA701B5DCB}.Release|Win32.ActiveCfg = Release|Win32
+		{94DF8971-1708-4EB2-A598-2CFA701B5DCB}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
