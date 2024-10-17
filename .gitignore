@@ -15,3 +15,6 @@ win/tbClient/tbClient.vcxproj.filters
 win/tbClient/tbClient.vcxproj.user
 win/gwServer.opensdf
 win/gwServer.suo
+win/proxyServer/Debug/
+win/proxyServer/proxyServer.vcxproj.filters
+win/proxyServer/proxyServer.vcxproj.user

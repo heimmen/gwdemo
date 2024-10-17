@@ -9,6 +9,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tokenBucket", "tokenBucket\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tbClient", "tbClient\tbClient.vcxproj", "{94DF8971-1708-4EB2-A598-2CFA701B5DCB}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "proxyServer", "proxyServer\proxyServer.vcxproj", "{7A82C8DA-AAB0-43FB-8D36-5D7C2F318982}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -31,6 +33,10 @@ Global
 		{94DF8971-1708-4EB2-A598-2CFA701B5DCB}.Debug|Win32.Build.0 = Debug|Win32
 		{94DF8971-1708-4EB2-A598-2CFA701B5DCB}.Release|Win32.ActiveCfg = Release|Win32
 		{94DF8971-1708-4EB2-A598-2CFA701B5DCB}.Release|Win32.Build.0 = Release|Win32
+		{7A82C8DA-AAB0-43FB-8D36-5D7C2F318982}.Debug|Win32.ActiveCfg = Debug|Win32
+		{7A82C8DA-AAB0-43FB-8D36-5D7C2F318982}.Debug|Win32.Build.0 = Debug|Win32
+		{7A82C8DA-AAB0-43FB-8D36-5D7C2F318982}.Release|Win32.ActiveCfg = Release|Win32
+		{7A82C8DA-AAB0-43FB-8D36-5D7C2F318982}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
