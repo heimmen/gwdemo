@@ -11,6 +11,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tbClient", "tbClient\tbClie
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "proxyServer", "proxyServer\proxyServer.vcxproj", "{7A82C8DA-AAB0-43FB-8D36-5D7C2F318982}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "proxy", "proxy\proxy.vcxproj", "{5DEC1929-1912-4DAF-B7B6-9E3F9EC4163F}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "proxyClient", "proxyClient\proxyClient.vcxproj", "{48BAA2D7-DC56-4D13-BBBD-895D77B875E5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -37,6 +41,14 @@ Global
 		{7A82C8DA-AAB0-43FB-8D36-5D7C2F318982}.Debug|Win32.Build.0 = Debug|Win32
 		{7A82C8DA-AAB0-43FB-8D36-5D7C2F318982}.Release|Win32.ActiveCfg = Release|Win32
 		{7A82C8DA-AAB0-43FB-8D36-5D7C2F318982}.Release|Win32.Build.0 = Release|Win32
+		{5DEC1929-1912-4DAF-B7B6-9E3F9EC4163F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{5DEC1929-1912-4DAF-B7B6-9E3F9EC4163F}.Debug|Win32.Build.0 = Debug|Win32
+		{5DEC1929-1912-4DAF-B7B6-9E3F9EC4163F}.Release|Win32.ActiveCfg = Release|Win32
+		{5DEC1929-1912-4DAF-B7B6-9E3F9EC4163F}.Release|Win32.Build.0 = Release|Win32
+		{48BAA2D7-DC56-4D13-BBBD-895D77B875E5}.Debug|Win32.ActiveCfg = Debug|Win32
+		{48BAA2D7-DC56-4D13-BBBD-895D77B875E5}.Debug|Win32.Build.0 = Debug|Win32
+		{48BAA2D7-DC56-4D13-BBBD-895D77B875E5}.Release|Win32.ActiveCfg = Release|Win32
+		{48BAA2D7-DC56-4D13-BBBD-895D77B875E5}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

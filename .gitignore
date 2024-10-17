@@ -18,3 +18,10 @@ win/gwServer.suo
 win/proxyServer/Debug/
 win/proxyServer/proxyServer.vcxproj.filters
 win/proxyServer/proxyServer.vcxproj.user
+win/proxy/Debug/
+win/proxyClient/Debug/
+
+win/proxyClient/proxyClient.vcxproj.user
+win/proxyClient/proxyClient.vcxproj.filters
+win/proxy/proxy.vcxproj.user
+win/proxy/proxy.vcxproj.filters
