@@ -17,9 +17,11 @@ CProxyClient::~CProxyClient(void)
 {
 }
 
-
 // 处理客户端连接的函数
 unsigned __stdcall send_request(void *arg) {
+    int thread_id = *(int*)arg;
+    free(arg); // 释放传递的参数内存
+
     SOCKET clientSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (clientSocket == INVALID_SOCKET) {
         printf("Error at socket(): %ld\n", WSAGetLastError());
@@ -39,7 +41,9 @@ unsigned __stdcall send_request(void *arg) {
         return 0;
     }
 
-    const char* message = "Hello, this is a test message.\n";
+    char message[100];
+    // 格式化消息字符串，包含序号
+    sprintf(message, "Hello, this is a test message from thread %d.\n", thread_id);
     size_t len = strlen(message);
     int sent = send(clientSocket, message, len, 0);
     if (sent == SOCKET_ERROR) {
@@ -72,18 +76,27 @@ int main() {
         printf("WSAStartup failed: %d\n", result);
         return 1;
     }
-	const int THREAD_COUNT = 10;
+
+	const int THREAD_COUNT = 1;
     HANDLE threads[THREAD_COUNT];
     for (int i = 0; i < THREAD_COUNT; ++i) {
-        threads[i] = (HANDLE)_beginthreadex(NULL, 0, send_request, NULL, 0, NULL);
+        int *thread_id = (int*)malloc(sizeof(int));
+        *thread_id = i;
+        threads[i] = (HANDLE)_beginthreadex(NULL, 0, send_request, thread_id, 0, NULL);
         if (threads[i] == NULL) {
             printf("Failed to create thread: %d\n", GetLastError());
+            free(thread_id); // 释放内存
             continue;
         }
     }
 
     // 等待所有线程结束
-    WaitForMultipleObjects(500, threads, TRUE, INFINITE);
+    WaitForMultipleObjects(THREAD_COUNT, threads, TRUE, INFINITE);
+
+    // 关闭线程句柄
+    for (int i = 0; i < THREAD_COUNT; ++i) {
+        CloseHandle(threads[i]);
+    }
 
     // 清理资源
     WSACleanup();

@@ -7,6 +7,8 @@
 #include <time.h>
 #include <windows.h>
 #include <process.h>
+#include <map>
+
 
 #pragma comment(lib, "Ws2_32.lib")
 
@@ -18,6 +20,7 @@ CProxy::CProxy(void)
 CProxy::~CProxy(void)
 {
 }
+
 
 // 令牌桶结构体
 typedef struct {
@@ -57,80 +60,6 @@ int consume_tokens(TokenBucket *bucket, unsigned long long tokens_to_consume) {
     } else {
         return 0; // 失败
     }
-}
-
-// 处理客户端连接的函数
-unsigned __stdcall handle_client(void *arg) {
-    SOCKET client_socket = *(SOCKET*)arg;
-    TokenBucket *bucket = (TokenBucket*)(((SOCKET*)arg) + 1);
-
-    char buffer[1024];
-    int bytesReceived = recv(client_socket, buffer, sizeof(buffer), 0);
-    if (bytesReceived > 0) {
-        buffer[bytesReceived] = '\0';
-        printf("Message from client: %s\n", buffer);
-
-        // 连接到服务端
-        SOCKET serverSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-        if (serverSocket == INVALID_SOCKET) {
-            printf("Error at socket(): %ld\n", WSAGetLastError());
-            closesocket(client_socket);
-            _endthreadex(0);
-            return 0;
-        }
-
-        struct sockaddr_in serverAddr;
-        serverAddr.sin_family = AF_INET;
-        serverAddr.sin_port = htons(12346); // 服务端端口 12346
-        inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr);
-
-        if (connect(serverSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
-            printf("Connect failed: %d\n", WSAGetLastError());
-            closesocket(client_socket);
-            closesocket(serverSocket);
-            _endthreadex(0);
-            return 0;
-        }
-
-        // 发送请求到服务端
-        size_t len = bytesReceived;
-		char* pBuff = buffer;
-        while (len > 0) {
-            if (consume_tokens(bucket, len)) { // 尝试消费足够的令牌
-                int sent = send(serverSocket, pBuff, len, 0);
-                if (sent == SOCKET_ERROR) {
-                    printf("Send failed: %d\n", WSAGetLastError());
-                    break;
-                }
-                pBuff += sent;
-                len -= sent;
-            } else {
-                Sleep(100); // 如果没有足够的令牌，等待一段时间再试
-            }
-        }
-
-        // 接收服务端响应
-        char response_buffer[1024];
-        int bytesReceivedFromServer = recv(serverSocket, response_buffer, sizeof(response_buffer), 0);
-        if (bytesReceivedFromServer > 0) {
-            response_buffer[bytesReceivedFromServer] = '\0';
-            send(client_socket, response_buffer, bytesReceivedFromServer, 0);
-        } else if (bytesReceivedFromServer == 0) {
-            printf("Connection closed by server.\n");
-        } else {
-            printf("Receive failed: %d\n", WSAGetLastError());
-        }
-
-        closesocket(serverSocket);
-    } else if (bytesReceived == 0) {
-        printf("Connection closed by client.\n");
-    } else {
-        printf("Receive failed: %d\n", WSAGetLastError());
-    }
-
-    closesocket(client_socket);
-    _endthreadex(0);
-    return 0;
 }
 
 int main() {
@@ -173,34 +102,127 @@ int main() {
     TokenBucket tb;
     init_token_bucket(&tb, 1000000, 1000000); // 最大1MB，每秒填充1MB
 
+    fd_set readfds, masterfds;
+    FD_ZERO(&masterfds);
+    FD_SET(ListenSocket, &masterfds);
+    SOCKET max_socket = ListenSocket;
+
+    std::map<SOCKET, SOCKET> client_to_server_map;
+
     while (true) {
-        SOCKET ClientSocket = accept(ListenSocket, NULL, NULL);
-        if (ClientSocket == INVALID_SOCKET) {
-            printf("Accept failed with error code : %d", WSAGetLastError());
-            continue;
+        readfds = masterfds;
+
+        if (select(0, &readfds, NULL, NULL, NULL) == SOCKET_ERROR) {
+            printf("Select failed: %d\n", WSAGetLastError());
+            break;
         }
 
-        printf("Client connected: %llu\n", (unsigned long long)ClientSocket);
+        for (SOCKET i = ListenSocket; i <= max_socket; ++i) {
+            if (FD_ISSET(i, &readfds)) {
+                if (i == ListenSocket) {
+                    // 新连接
+                    SOCKET ClientSocket = accept(ListenSocket, NULL, NULL);
+                    if (ClientSocket == INVALID_SOCKET) {
+                        printf("Accept failed with error code : %d", WSAGetLastError());
+                        continue;
+                    }
 
-        // 创建新线程处理客户端连接
-        SOCKET *client_socket_ptr = new SOCKET[2];
-        client_socket_ptr[0] = ClientSocket;
-        client_socket_ptr[1] = (SOCKET)&tb;
+                    printf("Client connected: %llu\n", (unsigned long long)ClientSocket);
+                    FD_SET(ClientSocket, &masterfds);
+                    if (ClientSocket > max_socket) {
+                        max_socket = ClientSocket;
+                    }
+                } else {
+                    // 处理已连接的客户端
+                    char buffer[1024];
+                    int bytesReceived = recv(i, buffer, sizeof(buffer), 0);
+                    if (bytesReceived > 0) {
+                        buffer[bytesReceived] = '\0';
+                        printf("Message from client: %s\n", buffer);
 
-        HANDLE hThread = (HANDLE)_beginthreadex(NULL, 0, handle_client, client_socket_ptr, 0, NULL);
-        if (hThread == NULL) {
-            printf("Failed to create thread: %d\n", GetLastError());
-            delete[] client_socket_ptr;
-            closesocket(ClientSocket);
-            continue;
+                        // 查找对应的服务器连接
+                        SOCKET serverSocket = client_to_server_map[i];
+                        if (serverSocket == INVALID_SOCKET || serverSocket == 0) {
+                            // 连接到服务端
+                            serverSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+                            if (serverSocket == INVALID_SOCKET) {
+                                printf("Error at socket(): %ld\n", WSAGetLastError());
+                                closesocket(i);
+                                FD_CLR(i, &masterfds);
+                                continue;
+                            }
+
+                            struct sockaddr_in serverAddr;
+                            serverAddr.sin_family = AF_INET;
+                            serverAddr.sin_port = htons(12346); // 服务端端口 12346
+                            inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr);
+
+                            if (connect(serverSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
+                                printf("Connect failed: %d\n", WSAGetLastError());
+                                closesocket(i);
+                                closesocket(serverSocket);
+                                FD_CLR(i, &masterfds);
+                                continue;
+                            }
+
+                            client_to_server_map[i] = serverSocket;
+                            FD_SET(serverSocket, &masterfds);
+                            if (serverSocket > max_socket) {
+                                max_socket = serverSocket;
+                            }
+                        }
+
+                        // 发送请求到服务端
+                        size_t len = bytesReceived;
+						char* pbuff = buffer;
+                        while (len > 0) {
+                            if (consume_tokens(&tb, len)) { // 尝试消费足够的令牌
+                                int sent = send(serverSocket, pbuff, len, 0);
+                                if (sent == SOCKET_ERROR) {
+                                    printf("Send failed: %d\n", WSAGetLastError());
+                                    break;
+                                }
+                                pbuff += sent;
+                                len -= sent;
+                            } else {
+                                Sleep(100); // 如果没有足够的令牌，等待一段时间再试
+                            }
+                        }
+                    } else if (bytesReceived == 0) {
+                        printf("Connection closed by client.\n");
+                        SOCKET serverSocket = client_to_server_map[i];
+                        if (serverSocket != INVALID_SOCKET) {
+                            closesocket(serverSocket);
+                            FD_CLR(serverSocket, &masterfds);
+                            client_to_server_map.erase(i);
+                        }
+                        closesocket(i);
+                        FD_CLR(i, &masterfds);
+                    } else {
+                        printf("Receive failed: %d\n", WSAGetLastError());
+                        SOCKET serverSocket = client_to_server_map[i];
+                        if (serverSocket != INVALID_SOCKET) {
+                            closesocket(serverSocket);
+                            FD_CLR(serverSocket, &masterfds);
+                            client_to_server_map.erase(i);
+                        }
+                        closesocket(i);
+                        FD_CLR(i, &masterfds);
+                    }
+                }
+            }
         }
-
-        // 不需要等待线程结束，让它们在后台运行
     }
 
     // 清理资源
+	for (std::map<SOCKET, SOCKET>::iterator it = client_to_server_map.begin();
+		it != client_to_server_map.end(); ++it) {
+        closesocket(it->first);
+        closesocket(it->second);
+    }
     closesocket(ListenSocket);
     WSACleanup();
 
     return 0;
 }
+
