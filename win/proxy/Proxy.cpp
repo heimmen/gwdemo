@@ -117,7 +117,17 @@ int main() {
             break;
         }
 
+		// TODO: Seperate the code to handle server and client socket.
         for (SOCKET i = ListenSocket; i <= max_socket; ++i) {
+			printf("Check ListenSocket %d Socket max_socket %d i %d \n", ListenSocket, max_socket, i);
+			bool isServerSocket = false;
+			for (std::map<SOCKET, SOCKET>::iterator it = client_to_server_map.begin();
+				it != client_to_server_map.end(); ++it) {
+				if (i == it->second)
+				{
+					isServerSocket = true;
+				}
+			}
             if (FD_ISSET(i, &readfds)) {
                 if (i == ListenSocket) {
                     // 新连接
@@ -138,14 +148,32 @@ int main() {
                     int bytesReceived = recv(i, buffer, sizeof(buffer), 0);
                     if (bytesReceived > 0) {
                         buffer[bytesReceived] = '\0';
-                        printf("Message from client: %s\n", buffer);
+						SOCKET targetSocket = INVALID_SOCKET;
+						if (isServerSocket)
+						{
+							//targetSocket = i;
+							for (std::map<SOCKET, SOCKET>::iterator it = client_to_server_map.begin();
+								it != client_to_server_map.end(); ++it) {
+								// To find the client
+								if (i == it->second)
+								{
+									targetSocket = it->first;
+								}
+							}
+							printf("Message from server %llu: %s\n", (unsigned long long)i, buffer);
+						}
+						else
+						{
+							// 查找对应的服务器连接
+							targetSocket = client_to_server_map[i];
+							printf("Message from client %llu: %s\n", (unsigned long long)i, buffer);
+						}
 
-                        // 查找对应的服务器连接
-                        SOCKET serverSocket = client_to_server_map[i];
-                        if (serverSocket == INVALID_SOCKET || serverSocket == 0) {
+                        //SOCKET serverSocket = client_to_server_map[i];
+                        if (targetSocket == INVALID_SOCKET || targetSocket == 0) {
                             // 连接到服务端
-                            serverSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-                            if (serverSocket == INVALID_SOCKET) {
+                            targetSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+                            if (targetSocket == INVALID_SOCKET) {
                                 printf("Error at socket(): %ld\n", WSAGetLastError());
                                 closesocket(i);
                                 FD_CLR(i, &masterfds);
@@ -157,27 +185,30 @@ int main() {
                             serverAddr.sin_port = htons(12346); // 服务端端口 12346
                             inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr);
 
-                            if (connect(serverSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
+                            if (connect(targetSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
                                 printf("Connect failed: %d\n", WSAGetLastError());
                                 closesocket(i);
-                                closesocket(serverSocket);
+                                closesocket(targetSocket);
                                 FD_CLR(i, &masterfds);
                                 continue;
                             }
 
-                            client_to_server_map[i] = serverSocket;
-                            FD_SET(serverSocket, &masterfds);
-                            if (serverSocket > max_socket) {
-                                max_socket = serverSocket;
+							printf("Connected to server socket: %llu\n", (unsigned long long)targetSocket);
+
+                            client_to_server_map[i] = targetSocket;
+                            FD_SET(targetSocket, &masterfds);
+                            if (targetSocket > max_socket) {
+                                max_socket = targetSocket;
                             }
                         }
 
-                        // 发送请求到服务端
+                        // 发送请求
                         size_t len = bytesReceived;
 						char* pbuff = buffer;
+						printf("Foward message \"%s\": %llu\n", buffer, (unsigned long long)targetSocket);
                         while (len > 0) {
                             if (consume_tokens(&tb, len)) { // 尝试消费足够的令牌
-                                int sent = send(serverSocket, pbuff, len, 0);
+                                int sent = send(targetSocket, pbuff, len, 0);
                                 if (sent == SOCKET_ERROR) {
                                     printf("Send failed: %d\n", WSAGetLastError());
                                     break;
@@ -189,23 +220,40 @@ int main() {
                             }
                         }
                     } else if (bytesReceived == 0) {
-                        printf("Connection closed by client.\n");
+                        printf("Received zero from socket: %llu\n", (unsigned long long)i);
                         SOCKET serverSocket = client_to_server_map[i];
-                        if (serverSocket != INVALID_SOCKET) {
+                        if (serverSocket != INVALID_SOCKET && serverSocket != 0) {
                             closesocket(serverSocket);
                             FD_CLR(serverSocket, &masterfds);
                             client_to_server_map.erase(i);
                         }
+						if (isServerSocket)
+						{
+							printf("Close server socket: %llu\n", (unsigned long long)i);
+						}
+						else
+						{
+							printf("Close socket: %llu\n", (unsigned long long)i);
+						}
                         closesocket(i);
                         FD_CLR(i, &masterfds);
                     } else {
                         printf("Receive failed: %d\n", WSAGetLastError());
+						printf("Try to close by socket: %llu\n", (unsigned long long)i);
                         SOCKET serverSocket = client_to_server_map[i];
-                        if (serverSocket != INVALID_SOCKET) {
+                        if (serverSocket != INVALID_SOCKET && serverSocket != 0) {
                             closesocket(serverSocket);
                             FD_CLR(serverSocket, &masterfds);
                             client_to_server_map.erase(i);
                         }
+						if (isServerSocket)
+						{
+							printf("Close server socket: %llu\n", (unsigned long long)i);
+						}
+						else
+						{
+							printf("Close socket: %llu\n", (unsigned long long)i);
+						}
                         closesocket(i);
                         FD_CLR(i, &masterfds);
                     }
