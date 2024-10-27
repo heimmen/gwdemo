@@ -24,7 +24,7 @@ unsigned __stdcall startClient(void *arg)
 }
 
 // 测试用例：测试多客户端并发访问
-void test_client_server_communication() {
+void test_client_server_communication(int threadCount) {
 	Server svr;
     HANDLE serverThread = (HANDLE)_beginthreadex(nullptr, 0, start_server_thread, &svr, 0, nullptr);
     if (serverThread == nullptr) {
@@ -36,7 +36,7 @@ void test_client_server_communication() {
     Sleep(1000);
 
     // 启动多个客户端
-	const int THREAD_COUNT = 80;
+	const int THREAD_COUNT = threadCount;
     std::vector<HANDLE> clientThreads;
     for (int i = 0; i < THREAD_COUNT; ++i) {
         HANDLE clientThread = (HANDLE)_beginthreadex(nullptr, 0, startClient, nullptr, 0, nullptr);
@@ -44,6 +44,7 @@ void test_client_server_communication() {
             std::cerr << "Failed to create client thread" << std::endl;
             continue;
         }
+		//Sleep(10);
         clientThreads.push_back(clientThread);
     }
 
@@ -57,7 +58,7 @@ void test_client_server_communication() {
 
     // 等待服务器线程结束
 	svr.stopServer();
-    WaitForSingleObject(serverThread, INFINITE);
+    WaitForSingleObject(serverThread, 10000);
     CloseHandle(serverThread);
 
 	printf("Pass test_client_server_communication.");
@@ -73,7 +74,11 @@ int main() {
     }
 
     // 运行测试用例
-    test_client_server_communication();
+    test_client_server_communication(128);
+	
+    test_client_server_communication(256);
+
+    test_client_server_communication(512);
 
     // 清理 Winsock
     WSACleanup();

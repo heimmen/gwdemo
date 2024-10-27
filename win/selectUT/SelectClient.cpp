@@ -32,7 +32,7 @@ public:
         inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr);
 
         if (connect(clientSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
-            std::cerr << "Connect failed: " << WSAGetLastError() << std::endl;
+            std::cerr << clientSocket << " connect failed: " << WSAGetLastError() << std::endl;
             closesocket(clientSocket);
             WSACleanup();
             return;
@@ -41,7 +41,7 @@ public:
         const char* message = "Hello from client";
         int sent = send(clientSocket, message, strlen(message), 0);
         if (sent == SOCKET_ERROR) {
-            std::cerr << "Send failed: " << WSAGetLastError() << std::endl;
+            std::cerr << clientSocket << " Send failed: " << WSAGetLastError() << std::endl;
         } else {
             std::cout << "Message sent" << std::endl;
         }
@@ -51,7 +51,7 @@ public:
         if (bytesReceived > 0) {
             std::cout << "Message received: " << buffer << std::endl;
         } else {
-            std::cerr << "Receive failed: " << WSAGetLastError() << std::endl;
+            std::cerr << clientSocket <<  " Receive failed: " << WSAGetLastError() << std::endl;
         }
 
         closesocket(clientSocket);
