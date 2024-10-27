@@ -2,22 +2,17 @@ win/Debug/
 win/gwClient/Debug/
 win/gwServer/Debug/
 win/ipch/
-win/gwClient/gwClient.vcxproj.filters
-win/gwClient/gwClient.vcxproj.user
-win/gwServer/gwServer.vcxproj.user
-win/gwServer/gwServer.vcxproj.filters
+win/gwClient/gwClient.vcxproj.*
+win/gwServer/gwServer.vcxproj.*
 win/gwServer.sdf
 win/tbClient/Debug/
 win/tokenBucket/Debug/
-win/tokenBucket/tokenBucket.vcxproj.filters
-win/tokenBucket/tokenBucket.vcxproj.user
-win/tbClient/tbClient.vcxproj.filters
-win/tbClient/tbClient.vcxproj.user
+win/tokenBucket/tokenBucket.vcxproj.*
+win/tbClient/tbClient.vcxproj.*
 win/gwServer.opensdf
 win/gwServer.suo
 win/proxyServer/Debug/
-win/proxyServer/proxyServer.vcxproj.filters
-win/proxyServer/proxyServer.vcxproj.user
+win/proxyServer/proxyServer.vcxproj.*
 win/proxy/Debug/
 win/proxyClient/Debug/
 
@@ -25,3 +20,5 @@ win/proxyClient/proxyClient.vcxproj.user
 win/proxyClient/proxyClient.vcxproj.filters
 win/proxy/proxy.vcxproj.user
 win/proxy/proxy.vcxproj.filters
+win/selectUT/Debug/
+win/selectUT/selectUT.vcxproj.*
