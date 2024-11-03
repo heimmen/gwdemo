@@ -60,6 +60,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Proxy.cpp" />
     <ClCompile Include="SelectClient.cpp" />
     <ClCompile Include="SelectServer.cpp" />
     <ClCompile Include="TestSuite.cpp" />

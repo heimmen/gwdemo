@@ -6,11 +6,11 @@
 
 #pragma comment(lib, "Ws2_32.lib")
 
-#define PORT 12346
+#define PORT 12345
 #define MAX_CLIENTS 10
 #define BUFFER_SIZE 1024
 
-class Server {
+class Proxy {
 private:
 	bool m_toStop;
 public:
@@ -27,28 +27,28 @@ public:
             return;
         }
 
-        SOCKET serverSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-        if (serverSocket == INVALID_SOCKET) {
+        SOCKET proxySocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+        if (proxySocket == INVALID_SOCKET) {
             std::cerr << "Socket creation failed: " << WSAGetLastError() << std::endl;
             WSACleanup();
             return;
         }
 
-        struct sockaddr_in serverAddr;
-        serverAddr.sin_family = AF_INET;
-        serverAddr.sin_port = htons(PORT);
-        serverAddr.sin_addr.s_addr = INADDR_ANY;
+        struct sockaddr_in proxyAddr;
+        proxyAddr.sin_family = AF_INET;
+        proxyAddr.sin_port = htons(PORT);
+        proxyAddr.sin_addr.s_addr = INADDR_ANY;
 
-        if (bind(serverSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
-            std::cerr << "Bind failed: " << WSAGetLastError() << std::endl;
-            closesocket(serverSocket);
+        if (bind(proxySocket, (struct sockaddr*)&proxyAddr, sizeof(proxyAddr)) == SOCKET_ERROR) {
+            std::cerr << "Bind proxy socket address failed: " << WSAGetLastError() << std::endl;
+            closesocket(proxySocket);
             WSACleanup();
             return;
         }
 
-        if (listen(serverSocket, MAX_CLIENTS) == SOCKET_ERROR) {
-            std::cerr << "Listen failed: " << WSAGetLastError() << std::endl;
-            closesocket(serverSocket);
+        if (listen(proxySocket, MAX_CLIENTS) == SOCKET_ERROR) {
+            std::cerr << "Listen proxy socket failed: " << WSAGetLastError() << std::endl;
+            closesocket(proxySocket);
             WSACleanup();
             return;
         }
@@ -56,9 +56,9 @@ public:
         std::vector<SOCKET> clientSockets;
         fd_set master;
         FD_ZERO(&master);
-        FD_SET(serverSocket, &master);
+        FD_SET(proxySocket, &master);
 
-        SOCKET maxSocket = serverSocket;
+        SOCKET maxSocket = proxySocket;
 
         while (true && !m_toStop) {
             fd_set readfds = master;
@@ -69,8 +69,8 @@ public:
 
             for (int i = 0; i <= maxSocket; ++i) {
                 if (FD_ISSET(i, &readfds)) {
-                    if (i == serverSocket) {
-                        SOCKET clientSocket = accept(serverSocket, nullptr, nullptr);
+                    if (i == proxySocket) {
+                        SOCKET clientSocket = accept(proxySocket, nullptr, nullptr);
                         if (clientSocket == INVALID_SOCKET) {
                             std::cerr << "Accept failed: " << WSAGetLastError() << std::endl;
                             continue;
@@ -79,7 +79,7 @@ public:
                         if (clientSocket > maxSocket) {
                             maxSocket = clientSocket;
                         }
-                        std::cout << "New client connected: " << clientSocket << std::endl;
+                        std::cout << "PROXY: New client connected: " << clientSocket << std::endl;
                     } else {
                         char buffer[BUFFER_SIZE] = {0};
                         int bytesReceived = recv(i, buffer, BUFFER_SIZE, 0);
@@ -100,15 +100,13 @@ public:
             }
         }
 
-        //for (auto& clientSocket : clientSockets) {
-        //    closesocket(clientSocket);
-        //}
-		for (int i = 0; i < clientSockets.size(); ++i) {
-			SOCKET clientSocket = clientSockets[i];
-			//WaitForSingleObject(clientThread, INFINITE);
-			closesocket(clientSocket);
-		}
-        closesocket(serverSocket);
+        for (int i = 0; i < clientSockets.size(); ++i)
+        {
+            SOCKET clientSocket = clientSockets[i];
+            closesocket(clientSocket);
+        }
+        closesocket(proxySocket);
         WSACleanup();
     }
 };
+

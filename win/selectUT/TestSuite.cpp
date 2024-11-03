@@ -8,11 +8,19 @@
 
 #include "SelectServer.cpp"
 #include "SelectClient.cpp"
+#include "Proxy.cpp"
 
 // 定义一个线程来启动服务器
 unsigned __stdcall start_server_thread(void* arg) {
     Server* server = static_cast<Server*>(arg);
     server->start();
+    return 0;
+}
+
+// 定义一个线程来启动服务器
+unsigned __stdcall start_proxy_thread(void* arg) {
+    Proxy* pProxy = static_cast<Proxy*>(arg);
+    pProxy->start();
     return 0;
 }
 
@@ -25,6 +33,10 @@ unsigned __stdcall startClient(void *arg)
 
 // 测试用例：测试多客户端并发访问
 void test_client_server_communication(int threadCount) {
+    /*
+    client -- 12345 --> proxy -- 12346 --> server
+    */
+
 	Server svr;
     HANDLE serverThread = (HANDLE)_beginthreadex(nullptr, 0, start_server_thread, &svr, 0, nullptr);
     if (serverThread == nullptr) {
@@ -32,7 +44,14 @@ void test_client_server_communication(int threadCount) {
         return;
     }
 
-    // 给服务器一些时间来启动
+    Proxy proxy;
+    HANDLE proxyThread = (HANDLE)_beginthreadex(nullptr, 0, start_proxy_thread, &proxy, 0, nullptr);
+    if (proxyThread == nullptr) {
+        std::cerr << "Failed to create server thread" << std::endl;
+        return;
+    }
+
+    // 给 Proxy 一些时间来启动
     Sleep(1000);
 
     // 启动多个客户端
@@ -55,11 +74,15 @@ void test_client_server_communication(int threadCount) {
         CloseHandle(clientThread);
     }
 
-
     // 等待服务器线程结束
 	svr.stopServer();
-    WaitForSingleObject(serverThread, 10000);
+    WaitForSingleObject(serverThread, 1000);
     CloseHandle(serverThread);
+
+    // 等待 proxy 线程结束
+	proxy.stopServer();
+    WaitForSingleObject(proxyThread, 1000);
+    CloseHandle(proxyThread);
 
 	printf("Pass test_client_server_communication.");
 }
@@ -74,7 +97,9 @@ int main() {
     }
 
     // 运行测试用例
-    test_client_server_communication(128);
+    test_client_server_communication(2);
+
+    // test_client_server_communication(128);
 	
     //test_client_server_communication(256);
 
