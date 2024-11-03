@@ -43,7 +43,7 @@ public:
         if (sent == SOCKET_ERROR) {
             std::cerr << clientSocket << " Send failed: " << WSAGetLastError() << std::endl;
         } else {
-            std::cout << "Message sent" << std::endl;
+            std::cout << "Client: Message sent" << std::endl;
         }
 
         char buffer[1024] = {0};

@@ -103,7 +103,7 @@ int main() {
 	
     //test_client_server_communication(256);
 
-    //test_client_server_communication(512);
+    // test_client_server_communication(512);
 
     // «Â¿Ì Winsock
     WSACleanup();

@@ -79,21 +79,21 @@ public:
                         if (clientSocket > maxSocket) {
                             maxSocket = clientSocket;
                         }
-                        std::cout << "New client connected: " << clientSocket << std::endl;
+                        std::cout << "Server: New client connected: " << clientSocket << std::endl;
                     } else {
                         char buffer[BUFFER_SIZE] = {0};
                         int bytesReceived = recv(i, buffer, BUFFER_SIZE, 0);
                         if (bytesReceived <= 0) {
-                            std::cout << "Client disconnected: " << i << std::endl;
+                            std::cout << "Server: Client disconnected: " << i << std::endl;
                             closesocket(i);
                             FD_CLR(i, &master);
                         } else {
-                            std::cout << "Message received from " << i << ": " << buffer << std::endl;
-                            const char* response = "Hello from server";
-                            int sent = send(i, response, strlen(response), 0);
-                            if (sent == SOCKET_ERROR) {
-                                std::cerr << "Send failed: " << WSAGetLastError() << std::endl;
-                            }
+                            std::cout << "Server: Message received from " << i << ": " << buffer << std::endl;
+                            // const char* response = "Hello from server";
+                            // int sent = send(i, response, strlen(response), 0);
+                            // if (sent == SOCKET_ERROR) {
+                            //     std::cerr << "Send failed: " << WSAGetLastError() << std::endl;
+                            // }
                         }
                     }
                 }
