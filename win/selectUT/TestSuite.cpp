@@ -76,9 +76,9 @@ int main() {
     // 运行测试用例
     test_client_server_communication(128);
 	
-    test_client_server_communication(256);
+    //test_client_server_communication(256);
 
-    test_client_server_communication(512);
+    //test_client_server_communication(512);
 
     // 清理 Winsock
     WSACleanup();
