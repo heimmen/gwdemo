@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <windows.h>
+#include <string>
 
 #pragma comment(lib, "Ws2_32.lib")
 
@@ -89,11 +90,13 @@ public:
                             FD_CLR(i, &master);
                         } else {
                             std::cout << "Server: Message received from " << i << ": " << buffer << std::endl;
-                            // const char* response = "Hello from server";
-                            // int sent = send(i, response, strlen(response), 0);
-                            // if (sent == SOCKET_ERROR) {
-                            //     std::cerr << "Send failed: " << WSAGetLastError() << std::endl;
-                            // }
+                            const char *response = "Hello response from server";
+							//std::string serverResponse = "Message reply from server for: " + ss;
+							int sent = send(i, response, strlen(response), 0);
+                            if (sent == SOCKET_ERROR)
+                            {
+                                std::cerr << "Send failed: " << WSAGetLastError() << std::endl;
+                            }
                         }
                     }
                 }

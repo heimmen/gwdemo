@@ -4,6 +4,7 @@
 #include <vector>
 #include <windows.h>
 #include <string>
+#include <map>
 
 #pragma comment(lib, "Ws2_32.lib")
 
@@ -67,6 +68,7 @@ public:
         fd_set masterfds;
         FD_ZERO(&masterfds);
         FD_SET(proxySocket, &masterfds);
+        std::map<SOCKET, SOCKET> client_to_server_map;
 
         SOCKET maxSocket = proxySocket;
         SOCKET serverSocket = INVALID_SOCKET;
@@ -86,6 +88,7 @@ public:
                 {
                     if (i == proxySocket)
                     {
+                        // Connecting from client to proxy
                         SOCKET clientSocket = accept(proxySocket, nullptr, nullptr);
                         if (clientSocket == INVALID_SOCKET)
                         {
@@ -98,6 +101,8 @@ public:
                             maxSocket = clientSocket;
                         }
                         std::cout << "PROXY: New client connected: " << clientSocket << std::endl;
+
+                        client_to_server_map[clientSocket] = INVALID_SOCKET;
                     }
                     else
                     {
@@ -108,59 +113,83 @@ public:
                             std::cout << "Client disconnected: " << i << std::endl;
                             closesocket(i);
                             FD_CLR(i, &masterfds);
+                            serverSocket = client_to_server_map[i];
+                            if (serverSocket != INVALID_SOCKET)
+                            {
+                                closesocket(serverSocket);
+                                FD_CLR(serverSocket, &masterfds);
+                            }
+                            client_to_server_map.erase(i);
                         }
                         else
                         {
-                            if (serverSocket == INVALID_SOCKET)
-                            {
-                                // Connect to server if not yet
-                                serverSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-                                if (serverSocket == INVALID_SOCKET)
+                            // Check if the message is from client
+                            std::map<SOCKET, SOCKET>::iterator it = client_to_server_map.find(i);
+                            if (it != client_to_server_map.end()) {
+                                // Forward message to the server
+                                if (serverSocket = it->second == INVALID_SOCKET)
                                 {
-                                    printf("Error at socket(): %ld\n", WSAGetLastError());
-                                    closesocket(i);
-                                    FD_CLR(i, &masterfds);
-                                    break;
+                                    // Connect to server if not yet
+                                    serverSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+                                    if (serverSocket == INVALID_SOCKET)
+                                    {
+                                        printf("Error at socket(): %ld\n", WSAGetLastError());
+                                        closesocket(i);
+                                        FD_CLR(i, &masterfds);
+                                        break;
+                                    }
+
+                                    struct sockaddr_in serverAddr;
+                                    serverAddr.sin_family = AF_INET;
+                                    serverAddr.sin_port = htons(SERVER_PORT);
+                                    inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr);
+
+                                    if (connect(serverSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
+                                    {
+                                        printf("Connect failed: %d\n", WSAGetLastError());
+                                        closesocket(i);
+                                        closesocket(serverSocket);
+                                        FD_CLR(i, &masterfds);
+                                        break;
+                                    }
+
+                                    printf("Proxy: Connected to server socket: %llu\n", (unsigned long long)serverSocket);
+
+                                    // client_to_server_map[i] = serverSocket;
+                                    FD_SET(serverSocket, &masterfds);
+                                    if (serverSocket > maxSocket)
+                                    {
+                                        maxSocket = serverSocket;
+                                    }
+                                    client_to_server_map[i] = serverSocket;
                                 }
+                                std::cout << "PROXY: Message received from client " << i << ": " << buffer << std::endl;
+                                // const char *response = "Hello from server";
+                                string forwardContent = "Message forwarded from proxy: " + string(buffer);
 
-                                struct sockaddr_in serverAddr;
-                                serverAddr.sin_family = AF_INET;
-                                serverAddr.sin_port = htons(SERVER_PORT);
-                                inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr);
-
-                                if (connect(serverSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
+                                int sent = send(serverSocket, forwardContent.c_str(), forwardContent.length(), 0);
+                                if (sent == SOCKET_ERROR)
                                 {
-                                    printf("Connect failed: %d\n", WSAGetLastError());
-                                    closesocket(i);
-                                    closesocket(serverSocket);
-                                    FD_CLR(i, &masterfds);
-                                    break;
+                                    std::cerr << "Send message to server failed: " << WSAGetLastError() << std::endl;
                                 }
-
-                                printf("Connected to server socket: %llu\n", (unsigned long long)serverSocket);
-
-                                // client_to_server_map[i] = serverSocket;
-                                FD_SET(serverSocket, &masterfds);
-                                if (serverSocket > maxSocket)
+                            } else {
+                                // This is response message from server.
+                                // TODO: Receive server response and send it back to client.
+                                std::cout << "PROXY: Message received from server " << i << ": " << buffer << std::endl;
+                                string forwardContent = "Response forwarded from proxy: " + string(buffer);
+                                for (std::map<SOCKET, SOCKET>::iterator it = client_to_server_map.begin();
+                                     it != client_to_server_map.end(); ++it)
                                 {
-                                    maxSocket = serverSocket;
+                                    if (i == it->second)
+                                    {
+                                        SOCKET clientSocket = it->first;
+                                        int sent = send(clientSocket, forwardContent.c_str(), forwardContent.length(), 0);
+                                        if (sent == SOCKET_ERROR)
+                                        {
+                                            std::cerr << "Send message to client failed: " << WSAGetLastError() << std::endl;
+                                        }
+                                    }
                                 }
-                            }
-                            std::cout << "PROXY: Message received from client " << i << ": " << buffer << std::endl;
-                            const char *response = "Hello from server";
-                            string forwardContent = "Message forwarded from proxy: " + string(buffer);
-
-                            // Forward message to the server
-                            int sent = send(serverSocket, forwardContent.c_str(), forwardContent.length(), 0);
-                            if (sent == SOCKET_ERROR)
-                            {
-                                std::cerr << "Send message to server failed: " << WSAGetLastError() << std::endl;
-                            }
-                            // TODO: Receive server response and send it back to client.
-                            sent = send(i, response, strlen(response), 0);
-                            if (sent == SOCKET_ERROR)
-                            {
-                                std::cerr << "Send message to client failed: " << WSAGetLastError() << std::endl;
                             }
                         }
                     }
